@@ -1,6 +1,8 @@
 import 'package:try_auth/util/constants.dart';
 import 'package:try_auth/screens/main_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,6 +12,31 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final LocalAuthentication auth = LocalAuthentication();
+
+  Future<void> _authenticate() async {
+    bool authenticated = false;
+    try {
+      authenticated = await auth.authenticate(
+        localizedReason: 'Authenticate to access secure police services',
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+        ),
+      );
+    } on PlatformException catch (e) {
+      print("Biometric authentication error: $e");
+    }
+
+    if (authenticated) {
+      _navigateToHome();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Authentication failed')),
+      );
+    }
+  }
+
   void _navigateToHome() {
     ScaffoldMessenger.of(
       context,
@@ -93,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 32),
                       ElevatedButton(
-                        onPressed: _navigateToHome,
+                        onPressed: _authenticate,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: lion,
                           foregroundColor: const Color(0xFF001F3F),
